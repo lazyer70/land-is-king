@@ -17,7 +17,7 @@
     var s; //socket object for connection
     function doInit() {
         try {
-            var host = "ws://localhost:4545/"; //設定socker server的ip:port
+            var host = "ws://:4545/"; //設定socker server的ip:port
             /*if(window.location.hostname) {
                 host = "ws://" + window.location.hostname + ":4545/";
             }*/
@@ -35,12 +35,25 @@
                 //用, 來切割訊息
                 strs = e.data.split(',');
                 //解讀各段訊息的內容
-                if(strs[0]=='T'){
+                if(strs[0]=="S"){
+                    Contest();
+                }
+                else if(strs[0]=='T'){
                     document.getElementById("timer").innerHTML = strs[1];
                     if(strs[1]==0){
                         alert("遊戲結束！");
+                        whowin();
                     }
                 }
+                else if(strs[0]=='C'){
+                    let player = document.getElementById('player').value;
+                    cellID=strs[1]; //格子的ID
+                    cellSign=strs[2]; //使用的符號
+                    cellDefense=strs[3];//格子當前防禦值
+                    player=strs[4];
+                    setCell(cellID,cellSign,cellDefense,player) //改格子的符號
+                }
+                
             };
             
         } catch (ex) {
@@ -51,6 +64,8 @@
     var intervalId; // 宣告變數 intervalId 用來儲存計時器
     function start() {
         timer = 30; // 設定倒數計時 30 秒
+        s.send("S"+","+0);
+        Contest();
         intervalId = setInterval(function() { // 設定每 1 秒執行一次函式
         timer -= 1; // 每次將 timer 減 1
         document.getElementById("timer").innerHTML = timer; // 更新畫面上的計時器
@@ -61,15 +76,85 @@
             
         }
         }, 1000); // 1000 毫秒 = 1 秒
+        
+        
+    }
+    function Contest(){
+        const cells = document.querySelectorAll(".cell");
+        //逐一設定onclick事件
+        cells.forEach(function(el) {
+            el.onclick=function() { 
+                id=this.id;
+                let defense = document.getElementById(id).getAttribute("defense");
+                parseInt(defense);
+                //console.log(defense);
+                //取得使用的符號
+                let mySign = document.getElementById('sign').value;
+                let player = document.getElementById('player').value;
+                if(player=="1"){
+                    defense++;
+                    s.send("C"+","+id+","+mySign+","+defense+","+player);
+                }
+                else if(player=="2"){
+                    defense--;
+                    s.send("C"+","+id+","+mySign+","+defense+","+player);
+                }
+                //把格子id跟使用的符號傳給socket server
+                
+            }
+        });
+    }
+    function setCell(id,sign,defense,player) {
+        document.getElementById(id).setAttribute("defense",defense);
+        if(player==1&&parseInt(defense)>0){
+            document.getElementById(id).innerHTML = sign;
+        }
+        else if(player==2&&parseInt(defense)<0){
+            document.getElementById(id).innerHTML = sign;
+        }
+        else if(parseInt(defense)==0){
+            document.getElementById(id).innerHTML =".";
+        }
+        //ce.value=sign;
+    }
+    function whowin(){
+        var table = document.getElementById("board");
+        var p1Land=0;
+        var p2Land=0;
+        for (var i = 0, row; row = table.rows[i]; i++) {
+        //iterate through rows
+        //rows would be accessed using the "row" variable assigned in the for loop
+            for (var j = 0, cell; cell = row.cells[j]; j++) {
+                //iterate through columns
+                //columns would be accessed using the "cell" variable assigned in the for loop
+                let defense=cell.getAttribute('defense');
+                parseInt(defense);
+                if(defense>=1){
+                    p1Land++;
+                }
+                else if(defense<=-1){
+                    p2Land++;
+                }
+            }
+        }
+        if(p1Land>p2Land){
+            alert("玩家1勝利，格子數為"+p1Land)
+        }
+        else if(p1Land<p2Land){
+            alert("玩家2勝利，格子數為"+p2Land)
+        }
+        else if(p1Land==p2Land){
+            alert("平手，雙方格子數為"+p1Land)
+        }
     }
 </script>
 <body onload="doInit()">
     搶地遊戲<br/>
     輸入使用的符號<input type='text' value='O' id='sign'><br/>
-    你是幾號玩家<input type='text' value='1 or 2' id='sign'><br/>
+    你是幾號玩家<input type='text' value='1 or 2' id='player'><br/>
     <div id="timer">30</div><br/>
     <button id="start" type="button" onclick="start()">start</button>
-    <table border="1" width="500px" height="500px">
+    <table border="1" width="500px" height="500px" id="board">
     <tr><td class='cell' id='00' defense='0'>.</td><td  class='cell' id='10' defense='0'>.</td>
         <td  class='cell' id='20' defense='0'>.</td>
         <td  class='cell' id='30' defense='0'>.</td><td  class='cell' id='40' defense='0'>.</td></tr>
