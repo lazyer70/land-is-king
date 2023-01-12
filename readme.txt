@@ -19,3 +19,4 @@
 	5.Contest() function是在偵測到開始後執行，其實玩家1的defense值會是往上+，玩家2是往下-，由此分辨該用誰的符號 setCell()
 	以上為簡單的介紹
 非常感謝
+https://github.com/lazyer70/land-is-king
