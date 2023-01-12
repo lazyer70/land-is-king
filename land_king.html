@@ -67,17 +67,15 @@
         s.send("S"+","+0);
         Contest();
         intervalId = setInterval(function() { // 設定每 1 秒執行一次函式
-        timer -= 1; // 每次將 timer 減 1
-        document.getElementById("timer").innerHTML = timer; // 更新畫面上的計時器
-        s.send("T,"+timer);
-        if (timer == 0) { // 如果計時器到達 0
+            timer -= 1; // 每次將 timer 減 1
+            document.getElementById("timer").innerHTML = timer; // 更新畫面上的計時器
+            s.send("T,"+timer);
+            if (timer == 0) { // 如果計時器到達 0
         // 停止遊戲並顯示遊戲結束
-            clearInterval(intervalId); // 停止計時器
+                clearInterval(intervalId); // 停止計時器
             
-        }
+            }
         }, 1000); // 1000 毫秒 = 1 秒
-        
-        
     }
     function Contest(){
         const cells = document.querySelectorAll(".cell");
